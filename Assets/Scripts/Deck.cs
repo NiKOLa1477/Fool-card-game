@@ -26,8 +26,10 @@ public class Deck : MonoBehaviour
     }
     private void TurnTrumpCard()
     {
+        cards[cards.Count - 1].setLayer(-1);
         cards[cards.Count - 1].TurnCard();
-        cards[cards.Count - 1].setFront();
+        cards[cards.Count - 1].transform.position -= new Vector3(0.4f, 0, 0);
+        cards[cards.Count - 1].setFront();       
     }
     public void TakeCards(Player pl, int count = 6)
     {
@@ -35,7 +37,7 @@ public class Deck : MonoBehaviour
         {
             if (cards[i].inDeck && count > 0)
             {
-                Card takenCard = cards[i].TakeCard();
+                Card takenCard = cards[i].TakeCard(pl);
                 if (i == cards.Count - 1)
                 {
                     cards[cards.Count - 1].TurnCard();
