@@ -9,19 +9,20 @@ public class Player : MonoBehaviour
     private Deck deck;
     private List<Card> cards = new List<Card>();
     public int getCount() { return cards.Count; }
+    public List<Card> getCards() { return cards; }
     public bool hasCards() 
     {
         if (cards.Count > 0) return true;       
         else return false;           
     }
     [SerializeField] private bool isAI;
+    public bool isBot() { return isAI; }
     public string getName() { return Name; }
     public void AddCard(Card card)
     {
         cards.Add(card.TakeCard(this));
         setCardsPos();
-        //if (!isAI) card.setFront();
-        card.setFront();
+        if (!isAI) card.setFront();        
     }
     public void RemoveCard(Card card) { cards.Remove(card); }
     private void printDeck()

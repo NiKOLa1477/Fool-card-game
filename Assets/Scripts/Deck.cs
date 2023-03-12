@@ -6,7 +6,8 @@ using System;
 
 public class Deck : MonoBehaviour
 {
-    [SerializeField] private List<Card> cards;
+    private UIManager UI;
+    [SerializeField] private List<Card> cards;    
     public CardType Trump { get; private set; }
     private void TossTheDeck()
     {
@@ -31,6 +32,15 @@ public class Deck : MonoBehaviour
         cards[cards.Count - 1].transform.position -= new Vector3(0.4f, 0, 0);
         cards[cards.Count - 1].setFront();       
     }
+    private int CountCards()
+    {
+        int count = 0;
+        foreach (var card in cards)
+        {
+            if (card.inDeck) count++;
+        }
+        return count;
+    }
     public void TakeCards(Player pl, int count = 6)
     {
         for (int i = 0; i < cards.Count; i++)
@@ -47,11 +57,15 @@ public class Deck : MonoBehaviour
                 count--;
             }
         }
+        UI.UpdDeckCount(CountCards(), Trump);
     }
     private void Awake()
     {
+        UI = FindObjectOfType<UIManager>();
         TossTheDeck();
-        Trump=cards[cards.Count-1].getType();
+        while(cards[cards.Count - 1].getType() == CardType.Joker)
+            TossTheDeck();
+        Trump =cards[cards.Count-1].getType();
         TurnTrumpCard();
     }
 }

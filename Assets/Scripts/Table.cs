@@ -6,18 +6,33 @@ using UnityEngine.UI;
 public class Table : MonoBehaviour
 {
     private Deck deck;
+    private UIManager UI;
     [SerializeField] private List<Player> Players = new List<Player>();
-    private string currPl, currEnemy;
+    public string currPl { get; private set; }
+    public string currEnemy { get; private set; }
+    public bool GameEnded { get; private set; }
     
     private List<Card> toBeat = new List<Card>();
     private List<Card> whichBeat = new List<Card>();
     [SerializeField] private List<Transform> toBeatPos;
     [SerializeField] private List<Transform> whichBeatPos;
+    public int getToBeatCount() { return toBeat.Count; }
+    public int getWhBeatCount() { return whichBeat.Count; }
+    public Card getCardToBeat() { return toBeat[toBeat.Count - 1]; }
     [SerializeField] private Transform trashPos;
 
-    [SerializeField] private Button Take, Pass;
+    
 
-    private void PlaceToBeatCard(Player pl, Card card)
+    private bool isPlAlive(string player)
+    {
+        foreach (var pl in Players)
+        {
+            if (pl.getName() == player && !pl.isBot())
+                return true;
+        }
+        return false;
+    }
+    public void PlaceToBeatCard(Player pl, Card card)
     {
         card.OnTable(true);
         card.setFront();
@@ -25,10 +40,10 @@ public class Table : MonoBehaviour
         toBeat.Add(card);
         card.transform.position = toBeatPos[toBeat.Count - 1].position;
         pl.RemoveCard(card);
-        pl.setCardsPos();
+        pl.setCardsPos();        
         CheckBtns();
     }
-    private void PlaceWhichBeatCard(Player pl, Card card)
+    public void PlaceWhichBeatCard(Player pl, Card card)
     {
         card.OnTable(true);
         card.setFront();
@@ -39,28 +54,33 @@ public class Table : MonoBehaviour
         pl.setCardsPos();
         CheckBtns();
     }
+    public bool HaveValue(int value)
+    {
+        foreach (var item in toBeat)
+        {
+            if (item.getValue() == value)
+            {
+                return true;
+            }
+        }
+        foreach (var item in whichBeat)
+        {
+            if (item.getValue() == value)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     public void tryPlaceCard(Player pl, Card card)
     {
         if(pl.getName() == currPl && toBeat.Count < 6)
         {
-            if(toBeat.Count > 0)
+            if(toBeat.Count > 0 && HaveValue(card.getValue()))
             {
-                foreach (var item in toBeat)
-                {
-                    if(item.getValue() == card.getValue())
-                    {
-                        PlaceToBeatCard(pl, card);
-                    }
-                }
-                foreach (var item in whichBeat)
-                {
-                    if(item.getValue() == card.getValue())
-                    {
-                        PlaceToBeatCard(pl, card);
-                    }
-                }
+                PlaceToBeatCard(pl, card);
             }
-            else
+            else if(toBeat.Count == 0)
             {
                 PlaceToBeatCard(pl, card);
             }
@@ -107,6 +127,7 @@ public class Table : MonoBehaviour
             }
         }
         if (skipOne) ChangePlayers(); //check active players later
+        UI.UpdPlayers(getCurrPlInd(), getCurrEnInd());
         Debug.Log($"Player: {currPl}\tEnemy: {currEnemy}");
     }
     public void TossCardsToTrash()
@@ -129,8 +150,8 @@ public class Table : MonoBehaviour
         {
             deck.TakeCards(pl, 6 - pl.getCount());
         }
-        haveWinner();
-        disableBtns();
+        if (haveWinner()) GameEnded = true;
+        UI.DeactAllBtns();
         ChangePlayers();
     }
 
@@ -157,30 +178,23 @@ public class Table : MonoBehaviour
             }
             deck.TakeCards(pl, 6 - pl.getCount());
         }
-        haveWinner();
-        disableBtns();
+        if (haveWinner()) GameEnded = true;
+        UI.DeactAllBtns();
         ChangePlayers(true);
     }
-
-    private void disableBtns()
-    {
-        Take.gameObject.SetActive(false);
-        Pass.gameObject.SetActive(false);
-    }
+   
     private void CheckBtns()
     {
-        if (toBeat[0] != null && toBeat.Count != whichBeat.Count)
+        if (toBeat[0] != null && toBeat.Count != whichBeat.Count && isPlAlive(currEnemy))
         {
-            Take.gameObject.SetActive(true);
-            Pass.gameObject.SetActive(false);
+            UI.ActTakeBtn();
         }
-        else if (toBeat[0] != null)
+        else if (toBeat.Count == whichBeat.Count && isPlAlive(currPl))
         {
-            Take.gameObject.SetActive(false);
-            Pass.gameObject.SetActive(true);
+            UI.ActPassBtn();
         }        
     }
-    private void haveWinner()
+    private bool haveWinner()
     {
         int i = 0;
         string fool = "";
@@ -195,19 +209,40 @@ public class Table : MonoBehaviour
         if(i == 1)
         {
             Debug.Log($"{fool} is a fool!");
-            disableBtns();
+            UI.DeactAllBtns(true);
+            return true;
         }
         else if(i == 0)
         {
             Debug.Log("Draw");
-            disableBtns();
+            UI.DeactAllBtns(true);
+            return true;
         }
+        return false;
+    }
+    private int getCurrPlInd()
+    {
+        for (int i = 0; i < Players.Count; i++)
+        {
+            if (Players[i].getName() == currPl) return i;
+        }
+        return -1;
+    }
+    private int getCurrEnInd()
+    {
+        for (int i = 0; i < Players.Count; i++)
+        {
+            if (Players[i].getName() == currEnemy) return i;
+        }
+        return -1;
     }
 
-    private void Start()
+    private void Awake()
     {
+        UI = FindObjectOfType<UIManager>();
         deck = FindObjectOfType<Deck>();       
         currPl = Players[0].getName();
         currEnemy = Players[1].getName();
+        UI.UpdPlayers(getCurrPlInd(), getCurrEnInd());
     }
 }

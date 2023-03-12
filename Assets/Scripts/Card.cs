@@ -32,10 +32,10 @@ public class Card : MonoBehaviour
     public void setBack() { GetComponent<SpriteRenderer>().sprite = back; }
     public void setPlayer(Player pl) { player = pl; }
     public Card TakeCard(Player pl)
-    {        
-            setPlayer(pl);
-            inDeck = false;
-            return this;      
+    {       
+        setPlayer(pl);
+        inDeck = false;
+        return this;      
     }
     public void setLayer(int ind)
     {
@@ -57,7 +57,7 @@ public class Card : MonoBehaviour
     }
     private void OnMouseDown()
     {
-        if(!inDeck && !onTable) table.tryPlaceCard(player, this);
+        if(!inDeck && !onTable && !player.isBot() && !table.GameEnded) table.tryPlaceCard(player, this);
     }
 
     private void Awake()
