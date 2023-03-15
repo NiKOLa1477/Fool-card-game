@@ -8,8 +8,10 @@ public class Table : MonoBehaviour
     private Deck deck;
     private UIManager UI;
     [SerializeField] private List<Player> Players = new List<Player>();
-    public string currPl { get; private set; }
-    public string currEnemy { get; private set; }
+    public int currPl { get; private set; }
+    public int currEnemy { get; private set; }
+    public bool isPlsChanging { get; private set; }
+    public Player getPlAt(int index) { return Players[index]; }
     public bool GameEnded { get; private set; }
     
     private List<Card> toBeat = new List<Card>();
@@ -20,18 +22,7 @@ public class Table : MonoBehaviour
     public int getWhBeatCount() { return whichBeat.Count; }
     public Card getCardToBeat() { return toBeat[toBeat.Count - 1]; }
     [SerializeField] private Transform trashPos;
-
-    
-
-    private bool isPlAlive(string player)
-    {
-        foreach (var pl in Players)
-        {
-            if (pl.getName() == player && !pl.isBot())
-                return true;
-        }
-        return false;
-    }
+  
     public void PlaceToBeatCard(Player pl, Card card)
     {
         card.OnTable(true);
@@ -74,7 +65,9 @@ public class Table : MonoBehaviour
     }
     public void tryPlaceCard(Player pl, Card card)
     {
-        if(pl.getName() == currPl && toBeat.Count < 6)
+        if(pl == Players[currPl] 
+            && Players[currEnemy].hasCards()
+            && toBeat.Count < 6)
         {
             if(toBeat.Count > 0 && HaveValue(card.getValue()))
             {
@@ -85,7 +78,7 @@ public class Table : MonoBehaviour
                 PlaceToBeatCard(pl, card);
             }
         }
-        else if(pl.getName() == currEnemy && toBeat.Count != whichBeat.Count)
+        else if(pl == Players[currEnemy] && toBeat.Count != whichBeat.Count)
         {
             var item = toBeat[toBeat.Count - 1];
             if(item.getType() != CardType.Joker)
@@ -116,22 +109,24 @@ public class Table : MonoBehaviour
     }
 
     private void ChangePlayers(bool skipOne = false)
-    {        
+    {       
         for (int i = 0; i < Players.Count; i++)
         {
-            if (Players[i].getName() == currEnemy)
+            if (i == currEnemy)
             {
-                currPl = Players[i].getName();
-                currEnemy = (i + 1 >= Players.Count) ? Players[0].getName() : Players[i + 1].getName();
+                currPl = i;
+                currEnemy = (i + 1 >= Players.Count) ? 0 : i + 1;
                 break;
             }
         }
         if (skipOne) ChangePlayers(); //check active players later
-        UI.UpdPlayers(getCurrPlInd(), getCurrEnInd());
+        UI.UpdPlayers(currPl, currEnemy);
         Debug.Log($"Player: {currPl}\tEnemy: {currEnemy}");
+        isPlsChanging = false;
     }
     public void TossCardsToTrash()
     {
+        isPlsChanging = true;
         foreach (var item in toBeat)
         {
             item.transform.position = trashPos.position;
@@ -148,18 +143,57 @@ public class Table : MonoBehaviour
         whichBeat = new List<Card>();
         foreach (var pl in Players)
         {
-            deck.TakeCards(pl, 6 - pl.getCount());
+            deck.TakeCards(pl, 6 - pl.getCardsCount());
         }
         if (haveWinner()) GameEnded = true;
         UI.DeactAllBtns();
         ChangePlayers();
     }
 
+    public void onTakeCards()
+    {
+        if (Players[currPl].isBot())
+        {
+            if (Players.Count > 2)
+            {
+
+            }
+            else
+            {
+                IStrategy str = Players[currPl].GetComponent<IStrategy>();
+                while (Players[currEnemy].hasCards() && toBeat.Count < 6)
+                {
+                    if (str.ChooseCardToAdd(out var card))
+                    {
+                        PlaceToBeatCard(Players[currPl], card);
+                    }
+                    else
+                    {
+                        TakeCards();
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (Players.Count > 2)
+            {
+
+            }
+            else
+            {
+                UI.ActPassBtn();
+                isPlsChanging = true;
+            }
+        }
+    }
     public void TakeCards()
     {
+        isPlsChanging = true;
         foreach (var pl in Players)
         {
-            if(pl.getName() == currEnemy)
+            if(pl == Players[currEnemy])
             {
                 foreach (var item in toBeat)
                 {
@@ -176,22 +210,22 @@ public class Table : MonoBehaviour
                 }
                 whichBeat = new List<Card>();               
             }
-            deck.TakeCards(pl, 6 - pl.getCount());
+            deck.TakeCards(pl, 6 - pl.getCardsCount());
         }
         if (haveWinner()) GameEnded = true;
-        UI.DeactAllBtns();
+        UI.DeactAllBtns();        
         ChangePlayers(true);
     }
    
     private void CheckBtns()
     {
-        if (toBeat[0] != null && toBeat.Count != whichBeat.Count && isPlAlive(currEnemy))
+        if (toBeat[0] != null && toBeat.Count != whichBeat.Count && !Players[currEnemy].isBot())
         {
             UI.ActTakeBtn();
         }
-        else if (toBeat.Count == whichBeat.Count && isPlAlive(currPl))
+        else if (toBeat.Count == whichBeat.Count && !Players[currPl].isBot())
         {
-            UI.ActPassBtn();
+            UI.ActTossBtn();
         }        
     }
     private bool haveWinner()
@@ -219,30 +253,14 @@ public class Table : MonoBehaviour
             return true;
         }
         return false;
-    }
-    private int getCurrPlInd()
-    {
-        for (int i = 0; i < Players.Count; i++)
-        {
-            if (Players[i].getName() == currPl) return i;
-        }
-        return -1;
-    }
-    private int getCurrEnInd()
-    {
-        for (int i = 0; i < Players.Count; i++)
-        {
-            if (Players[i].getName() == currEnemy) return i;
-        }
-        return -1;
-    }
+    }  
 
     private void Awake()
     {
         UI = FindObjectOfType<UIManager>();
         deck = FindObjectOfType<Deck>();       
-        currPl = Players[0].getName();
-        currEnemy = Players[1].getName();
-        UI.UpdPlayers(getCurrPlInd(), getCurrEnInd());
+        currPl = 0;
+        currEnemy = 1;
+        UI.UpdPlayers(currPl, currEnemy);
     }
 }

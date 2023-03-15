@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Player))]
-public class DefaultStrategy : MonoBehaviour
+public class DefaultStrategy : MonoBehaviour, IStrategy
 {
     private Table table;
     private Player player;
     private Deck deck;
     private List<Card> cards;
     private bool isMoving = false;
-
-    private Card ChooseCardToBeat() //min from common or min from trump
+   
+    public Card ChooseCardToBeat() //min from common or min from trump
     {
         int minValue = 16;
         Card card = null;
@@ -38,7 +38,7 @@ public class DefaultStrategy : MonoBehaviour
         }
         return card;
     }
-    private bool ChooseCardWhichBeat(out Card card) //using min card possible
+    public bool ChooseCardWhichBeat(out Card card) //using min card possible
     {
         Card toBeat = table.getCardToBeat();
         int minValue = 16;
@@ -79,7 +79,7 @@ public class DefaultStrategy : MonoBehaviour
         }
         return false;       
     }
-    private bool ChooseCardToAdd(out Card card) //adds only common cards
+    public bool ChooseCardToAdd(out Card card) //adds only common cards
     {
         bool haveCard = false;
         card = null;
@@ -108,15 +108,15 @@ public class DefaultStrategy : MonoBehaviour
             if (ChooseCardWhichBeat(out var card))
                 table.PlaceWhichBeatCard(player, card);
             else
-                table.TakeCards();
+                table.onTakeCards();
         }
-        else if(table.getToBeatCount() < 6) //can add more
+        else  //can add more
         {
             if (ChooseCardToAdd(out var card))
                 table.PlaceToBeatCard(player, card);
-            else if(player.getName() == table.currPl)
+            else 
                 table.TossCardsToTrash();
-        }       
+        }     
     }
     void Start()
     {
@@ -129,16 +129,27 @@ public class DefaultStrategy : MonoBehaviour
     {
         if (!table.GameEnded)
         {
-            if (player.getName() == table.currPl && table.getToBeatCount() == table.getWhBeatCount())
+            if (player == table.getPlAt(table.currPl) && canAddCard())
             {
-                if (!isMoving) StartCoroutine(MoveRoutine());
+                if (!isMoving && !table.isPlsChanging) StartCoroutine(MoveRoutine());
             }
-            else if (player.getName() == table.currEnemy && table.getToBeatCount() != table.getWhBeatCount())
+            else if (player == table.getPlAt(table.currEnemy) && table.getToBeatCount() != table.getWhBeatCount())
             {
-                if (!isMoving) StartCoroutine(MoveRoutine());
+                if (!isMoving && !table.isPlsChanging) StartCoroutine(MoveRoutine());
             }
         }
     }   
+
+    private bool canAddCard()
+    {
+        if (table.getToBeatCount() == table.getWhBeatCount()
+            && table.getPlAt(table.currEnemy).hasCards()
+            && table.getToBeatCount() < 6)
+        {
+            return true;
+        }
+        else return false;
+    }
 
     private IEnumerator MoveRoutine()
     {

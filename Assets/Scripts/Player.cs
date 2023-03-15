@@ -8,7 +8,7 @@ public class Player : MonoBehaviour
     [SerializeField] private string Name;
     private Deck deck;
     private List<Card> cards = new List<Card>();
-    public int getCount() { return cards.Count; }
+    public int getCardsCount() { return cards.Count; }
     public List<Card> getCards() { return cards; }
     public bool hasCards() 
     {

@@ -11,7 +11,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private List<Image> PlNameBgs;
     [SerializeField] private TMP_Text inDeckCount;
     [SerializeField] private List<string> trumpNames;
-    [SerializeField] private Button Take, Pass, Restart;
+    [SerializeField] private Button Take, Toss, Pass, Restart;
 
     public void UpdDeckCount(int value, CardType trump) 
     { 
@@ -32,16 +32,25 @@ public class UIManager : MonoBehaviour
     public void ActTakeBtn()
     {
         Take.gameObject.SetActive(true);
+        Toss.gameObject.SetActive(false);
+        Pass.gameObject.SetActive(false);
+    }
+    public void ActTossBtn()
+    {
+        Take.gameObject.SetActive(false);
+        Toss.gameObject.SetActive(true);
         Pass.gameObject.SetActive(false);
     }
     public void ActPassBtn()
     {
         Take.gameObject.SetActive(false);
+        Toss.gameObject.SetActive(false);
         Pass.gameObject.SetActive(true);
     }
     public void DeactAllBtns(bool gameEnded = false)
     {
         Take.gameObject.SetActive(false);
+        Toss.gameObject.SetActive(false);
         Pass.gameObject.SetActive(false);
         if (gameEnded) Restart.gameObject.SetActive(true);
     }
