@@ -11,7 +11,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private List<Image> PlNameBgs;
     [SerializeField] private TMP_Text inDeckCount;
     [SerializeField] private List<string> trumpNames;
-    [SerializeField] private Button Take, Toss, Pass, Restart;
+    [SerializeField] private Button onTake, onToss, onPass, Restart;
 
     public void UpdDeckCount(int value, CardType trump) 
     { 
@@ -31,27 +31,27 @@ public class UIManager : MonoBehaviour
     }
     public void ActTakeBtn()
     {
-        Take.gameObject.SetActive(true);
-        Toss.gameObject.SetActive(false);
-        Pass.gameObject.SetActive(false);
+        onTake.gameObject.SetActive(true);
+        onToss.gameObject.SetActive(false);
+        onPass.gameObject.SetActive(false);
     }
     public void ActTossBtn()
     {
-        Take.gameObject.SetActive(false);
-        Toss.gameObject.SetActive(true);
-        Pass.gameObject.SetActive(false);
+        onTake.gameObject.SetActive(false);
+        onToss.gameObject.SetActive(true);
+        onPass.gameObject.SetActive(false);
     }
     public void ActPassBtn()
     {
-        Take.gameObject.SetActive(false);
-        Toss.gameObject.SetActive(false);
-        Pass.gameObject.SetActive(true);
+        onTake.gameObject.SetActive(false);
+        onToss.gameObject.SetActive(false);
+        onPass.gameObject.SetActive(true);
     }
     public void DeactAllBtns(bool gameEnded = false)
     {
-        Take.gameObject.SetActive(false);
-        Toss.gameObject.SetActive(false);
-        Pass.gameObject.SetActive(false);
+        onTake.gameObject.SetActive(false);
+        onToss.gameObject.SetActive(false);
+        onPass.gameObject.SetActive(false);
         if (gameEnded) Restart.gameObject.SetActive(true);
     }
     public void RestartGame()
@@ -63,8 +63,20 @@ public class UIManager : MonoBehaviour
         Application.Quit();
     }
 
-    private void Awake()
+    private void swapNames(int i, int j)
     {
+        var temp = PlNameBgs[i];
+        PlNameBgs[i] = PlNameBgs[j];
+        PlNameBgs[j] = temp;
+    }
+    private void Start()
+    {
+        var table = FindObjectOfType<Table>();       
+        if(table.getPlCount() == 3)
+        {
+            swapNames(2, 3);
+            PlNameBgs[3].gameObject.SetActive(false);
+        }
         trumpNames=new List<string>();
         trumpNames.Add("Club");
         trumpNames.Add("Diamond");

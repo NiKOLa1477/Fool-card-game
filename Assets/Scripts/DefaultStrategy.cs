@@ -80,21 +80,20 @@ public class DefaultStrategy : MonoBehaviour, IStrategy
         return false;       
     }
     public bool ChooseCardToAdd(out Card card) //adds only common cards
-    {
-        bool haveCard = false;
+    {              
         card = null;
-        foreach (var item in cards)
+        if (cards == null) return false;
+            foreach (var item in cards)
         {
             if (table.HaveValue(item.getValue()) 
                 && item.getType() != deck.Trump
                 && item.getType() != CardType.Joker)
             {
                 card = item;
-                haveCard = true;
-                break;
+                return true;               
             }
         }
-        return (haveCard) ? true : false;      
+        return false;      
     }
     private void Move()
     {
@@ -110,12 +109,12 @@ public class DefaultStrategy : MonoBehaviour, IStrategy
             else
                 table.onTakeCards();
         }
-        else  //can add more
+        else if(table.getToBeatCount() == table.getWhBeatCount()) //can add more
         {
-            if (ChooseCardToAdd(out var card))
+            if (ChooseCardToAdd(out var card) && canAddCard())
                 table.PlaceToBeatCard(player, card);
             else 
-                table.TossCardsToTrash();
+                table.onTossCards();
         }     
     }
     void Start()
@@ -129,21 +128,21 @@ public class DefaultStrategy : MonoBehaviour, IStrategy
     {
         if (!table.GameEnded)
         {
-            if (player == table.getPlAt(table.currPl) && canAddCard())
+            if (player == table.getPlAt(table.currPl) 
+                && table.getToBeatCount() == table.getWhBeatCount())
             {
-                if (!isMoving && !table.isPlsChanging) StartCoroutine(MoveRoutine());
+                if (!isMoving && !table.isPlayerMoving) StartCoroutine(MoveRoutine());
             }
             else if (player == table.getPlAt(table.currEnemy) && table.getToBeatCount() != table.getWhBeatCount())
             {
-                if (!isMoving && !table.isPlsChanging) StartCoroutine(MoveRoutine());
+                if (!isMoving && !table.isPlayerMoving) StartCoroutine(MoveRoutine());
             }
         }
     }   
 
     private bool canAddCard()
     {
-        if (table.getToBeatCount() == table.getWhBeatCount()
-            && table.getPlAt(table.currEnemy).hasCards()
+        if (table.getPlAt(table.currEnemy).hasCards()
             && table.getToBeatCount() < 6)
         {
             return true;

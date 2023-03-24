@@ -1,18 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.UI;
 
 public class Table : MonoBehaviour
 {
+    private static float R_Border, U_Border;
     private Deck deck;
     private UIManager UI;
     [SerializeField] private List<Player> Players = new List<Player>();
+    public int getPlCount() { return Players.Count; }
     public int currPl { get; private set; }
     public int currEnemy { get; private set; }
-    public bool isPlsChanging { get; private set; }
+    public bool isPlayerMoving { get; private set; }
     public Player getPlAt(int index) { return Players[index]; }
     public bool GameEnded { get; private set; }
+    private bool isPlayerFinished;
+    private float beatTime = 20;
+
+    public void finishTurn() 
+    {
+        UI.DeactAllBtns();
+        isPlayerFinished = true;       
+    }
     
     private List<Card> toBeat = new List<Card>();
     private List<Card> whichBeat = new List<Card>();
@@ -23,6 +35,110 @@ public class Table : MonoBehaviour
     public Card getCardToBeat() { return toBeat[toBeat.Count - 1]; }
     [SerializeField] private Transform trashPos;
   
+    private int findPlIndex(Player pl)
+    {
+        for (int i = 0; i < Players.Count; i++)
+        {
+            if (pl == Players[i]) return i;
+        }
+        return -1;
+    }
+    public void setPlCardsPos(Player pl)
+    {
+        var cards = pl.getCards();
+        float dx, start;
+        if (pl.isBot())
+        {
+            switch (Players.Count)
+            {
+                case 2:
+                    dx = (R_Border * 2 - (R_Border / 4)) / cards.Count;
+                    if (dx > 1.4f)
+                        dx = 1.4f;
+                    start = -R_Border + (R_Border / 10);
+                    for (int i = 0; i < cards.Count; i++)
+                    {
+                        if (dx < 1.4f) cards[i].setLayer(i);
+                        cards[i].transform.position = new Vector3(start + i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
+                    }
+                    break;
+                case 3:
+                    if(findPlIndex(pl) == 1)
+                    {
+                        dx = (R_Border - (R_Border / 4)) / cards.Count;
+                        if (dx > 1.4f)
+                            dx = 1.4f;
+                        start = -R_Border + (R_Border / 10);
+                        for (int i = 0; i < cards.Count; i++)
+                        {
+                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].transform.position = new Vector3(start + i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
+                        }
+                    }
+                    else
+                    {
+                        dx = (R_Border - (R_Border / 4)) / cards.Count;
+                        if (dx > 1.4f)
+                            dx = 1.4f;
+                        start = R_Border - (R_Border / 10);
+                        for (int i = 0; i < cards.Count; i++)
+                        {
+                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].transform.position = new Vector3(start - i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
+                        }
+                    }
+                    break;
+                case 4:
+                    if (findPlIndex(pl) == 1)
+                    {
+                        dx = (R_Border - (R_Border / 2)) / cards.Count;
+                        if (dx > 1.4f)
+                            dx = 1.4f;
+                        start = -R_Border + (R_Border / 10);
+                        for (int i = 0; i < cards.Count; i++)
+                        {
+                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].transform.position = new Vector3(start + i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
+                        }
+                    }
+                    else if (findPlIndex(pl) == 2)
+                    {
+                        dx = (R_Border / 2) / cards.Count;
+                        if (dx > 1.4f)
+                            dx = 1.4f;
+                        start = -R_Border / 4;
+                        for (int i = 0; i < cards.Count; i++)
+                        {
+                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].transform.position = new Vector3(start + i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
+                        }
+                    }                    
+                    else
+                    {
+                        dx = (R_Border - (R_Border / 2)) / cards.Count;
+                        if (dx > 1.4f)
+                            dx = 1.4f;
+                        start = R_Border - (R_Border / 10);
+                        for (int i = 0; i < cards.Count; i++)
+                        {
+                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].transform.position = new Vector3(start - i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
+                        }
+                    }
+                    break;
+            }
+        }
+        else
+        {            
+            dx = (R_Border * 2 - (R_Border / 4)) / cards.Count;
+            if (dx > 1.4f) dx = 1.4f;
+            start = -R_Border + (R_Border / 10);
+            for (int i = 0; i < cards.Count; i++)
+            {
+                cards[i].transform.position = new Vector3(start + i * dx, -U_Border + U_Border / 4, cards[i].transform.position.z);
+            }
+        }
+    }
     public void PlaceToBeatCard(Player pl, Card card)
     {
         card.OnTable(true);
@@ -31,7 +147,7 @@ public class Table : MonoBehaviour
         toBeat.Add(card);
         card.transform.position = toBeatPos[toBeat.Count - 1].position;
         pl.RemoveCard(card);
-        pl.setCardsPos();        
+        setPlCardsPos(pl);        
         CheckBtns();
     }
     public void PlaceWhichBeatCard(Player pl, Card card)
@@ -42,7 +158,7 @@ public class Table : MonoBehaviour
         whichBeat.Add(card);
         card.transform.position = whichBeatPos[whichBeat.Count - 1].position;
         pl.RemoveCard(card);
-        pl.setCardsPos();
+        setPlCardsPos(pl);
         CheckBtns();
     }
     public bool HaveValue(int value)
@@ -66,7 +182,7 @@ public class Table : MonoBehaviour
     public void tryPlaceCard(Player pl, Card card)
     {
         if(pl == Players[currPl] 
-            && Players[currEnemy].hasCards()
+            && Players[currEnemy].getCardsCount() > toBeat.Count - whichBeat.Count
             && toBeat.Count < 6)
         {
             if(toBeat.Count > 0 && HaveValue(card.getValue()))
@@ -109,24 +225,39 @@ public class Table : MonoBehaviour
     }
 
     private void ChangePlayers(bool skipOne = false)
-    {       
-        for (int i = 0; i < Players.Count; i++)
+    {
+        var temp = tryFindNext(currEnemy, Players.Count);       
+        if(temp == -1)
         {
-            if (i == currEnemy)
+            temp = tryFindNext(0, currEnemy);           
+        }
+        if (temp == -1) Debug.Log("Can't find next player");
+        else currPl = temp;
+        temp = tryFindNext(currPl + 1, Players.Count);
+        if(temp == -1)
+        {
+            temp = tryFindNext(0, currPl);
+        }
+        if (temp == -1) Debug.Log("Can't find next enemy");
+        else currEnemy = temp;
+        if (skipOne) ChangePlayers(); 
+        UI.UpdPlayers(currPl, currEnemy);               
+    }
+
+    private int tryFindNext(int start, int end)
+    {
+        for (int i = start; i < end; i++)
+        {
+            if (Players[i].hasCards())
             {
-                currPl = i;
-                currEnemy = (i + 1 >= Players.Count) ? 0 : i + 1;
-                break;
+                return i;               
             }
         }
-        if (skipOne) ChangePlayers(); //check active players later
-        UI.UpdPlayers(currPl, currEnemy);
-        Debug.Log($"Player: {currPl}\tEnemy: {currEnemy}");
-        isPlsChanging = false;
+        return -1;
     }
     public void TossCardsToTrash()
     {
-        isPlsChanging = true;
+        isPlayerMoving = true;
         foreach (var item in toBeat)
         {
             item.transform.position = trashPos.position;
@@ -147,50 +278,184 @@ public class Table : MonoBehaviour
         }
         if (haveWinner()) GameEnded = true;
         UI.DeactAllBtns();
-        ChangePlayers();
+        if(!GameEnded) ChangePlayers();
+        isPlayerMoving = false;
     }
 
-    public void onTakeCards()
+    public void onTossCards()
     {
-        if (Players[currPl].isBot())
+        isPlayerFinished = false;
+        UI.DeactAllBtns();
+        StopAllCoroutines();        
+        StartCoroutine(addCardsToBeat(3));
+    }
+    private IEnumerator addCardsToBeat(float delay)
+    {
+        int placedCards = 0;
+        for (int i = currEnemy + 1; i < Players.Count; i++)
         {
-            if (Players.Count > 2)
+            if (i != currEnemy)
             {
-
-            }
-            else
-            {
-                IStrategy str = Players[currPl].GetComponent<IStrategy>();
-                while (Players[currEnemy].hasCards() && toBeat.Count < 6)
+                if (Players[i].isBot())
                 {
-                    if (str.ChooseCardToAdd(out var card))
+                    var str = Players[i].GetComponent<IStrategy>();
+                    while (Players[currEnemy].getCardsCount() > toBeat.Count - whichBeat.Count
+                        && toBeat.Count < 6)
                     {
-                        PlaceToBeatCard(Players[currPl], card);
+                        if (str.ChooseCardToAdd(out var card))
+                        {
+                            placedCards++;
+                            PlaceToBeatCard(Players[i], card);
+                            if (!Players[currEnemy].isBot()) delay = beatTime;
+                            yield return new WaitForSeconds(delay);
+                        }
+                        else break;
                     }
-                    else
+                }
+                else if (Players[i].hasCards())
+                {
+                    var tempPl = currPl;
+                    currPl = i;
+                    UI.ActPassBtn();
+                    isPlayerMoving = true;
+                    while (!isPlayerFinished)
                     {
-                        TakeCards();
-                        break;
+                        yield return new WaitForSeconds(delay);
                     }
+                    isPlayerFinished = false;
+                    UI.DeactAllBtns();
+                    currPl = tempPl;                    
+                }               
+            }
+        }
+        for (int i = 0; i < currPl; i++)
+        {
+            if (i != currEnemy)
+            {
+                if (Players[i].isBot())
+                {
+                    var str = Players[i].GetComponent<IStrategy>();
+                    while (Players[currEnemy].getCardsCount() > toBeat.Count - whichBeat.Count
+                        && toBeat.Count < 6)
+                    {
+                        if (str.ChooseCardToAdd(out var card))
+                        {
+                            PlaceToBeatCard(Players[i], card);
+                            yield return new WaitForSeconds(delay);
+                        }
+                        else break;
+                    }
+                }
+                else if (Players[i].hasCards())
+                {
+                    var tempPl = currPl;
+                    currPl = i;
+                    UI.ActPassBtn();
+                    isPlayerMoving = true;
+                    while (!isPlayerFinished)
+                    {
+                        yield return new WaitForSeconds(delay);
+                    }
+                    isPlayerFinished = false;
+                    UI.DeactAllBtns();
+                    currPl = tempPl;                   
                 }
             }
         }
+        if (placedCards > 0) onTossCards();
+        else if (toBeat.Count != whichBeat.Count)
+        {
+            TakeCards();
+        }
         else
         {
-            if (Players.Count > 2)
-            {
-
-            }
-            else
-            {
-                UI.ActPassBtn();
-                isPlsChanging = true;
-            }
+            TossCardsToTrash();
         }
     }
-    public void TakeCards()
+
+    public void onTakeCards()
+    {       
+        isPlayerFinished = false;
+        UI.DeactAllBtns();
+        StopAllCoroutines();
+        StartCoroutine(addCardsToTake(1));       
+    }
+
+    private IEnumerator addCardsToTake(float delay)
     {
-        isPlsChanging = true;
+        for (int i = currPl; i < Players.Count; i++)
+        {
+            if(i != currEnemy)
+            {
+                if (Players[i].isBot())
+                {
+                    var str = Players[i].GetComponent<IStrategy>();
+                    while (Players[currEnemy].getCardsCount() > toBeat.Count - whichBeat.Count
+                        && toBeat.Count < 6)
+                    {
+                        if (str.ChooseCardToAdd(out var card))
+                        {
+                            yield return new WaitForSeconds(delay);
+                            PlaceToBeatCard(Players[i], card);
+                        }
+                        else break;
+                    }
+                }
+                else if (Players[i].hasCards())
+                {
+                    var tempPl = currPl;
+                    currPl = i;
+                    UI.ActPassBtn();
+                    isPlayerMoving = true;
+                    while (!isPlayerFinished)
+                    {
+                        yield return new WaitForSeconds(delay);
+                    }
+                    isPlayerFinished = false;
+                    UI.DeactAllBtns();
+                    currPl = tempPl;
+                }
+            }
+        }
+        for (int i = 0; i < currPl; i++)
+        {
+            if (i != currEnemy)
+            {
+                if (Players[i].isBot())
+                {
+                    var str = Players[i].GetComponent<IStrategy>();
+                    while (Players[currEnemy].getCardsCount() > toBeat.Count - whichBeat.Count
+                        && toBeat.Count < 6)
+                    {
+                        if (str.ChooseCardToAdd(out var card))
+                        {
+                            yield return new WaitForSeconds(delay);
+                            PlaceToBeatCard(Players[i], card);
+                        }
+                        else break;
+                    }
+                }
+                else if (Players[i].hasCards())
+                {
+                    var tempPl = currPl;
+                    currPl = i;
+                    UI.ActPassBtn();
+                    isPlayerMoving = true;
+                    while (!isPlayerFinished)
+                    {
+                        yield return new WaitForSeconds(delay);
+                    }
+                    isPlayerFinished = false;
+                    UI.DeactAllBtns();
+                    currPl = tempPl;
+                }
+            }
+        }
+        TakeCards();
+    }
+    private void TakeCards()
+    {
+        isPlayerMoving = true;
         foreach (var pl in Players)
         {
             if(pl == Players[currEnemy])
@@ -213,8 +478,9 @@ public class Table : MonoBehaviour
             deck.TakeCards(pl, 6 - pl.getCardsCount());
         }
         if (haveWinner()) GameEnded = true;
-        UI.DeactAllBtns();        
-        ChangePlayers(true);
+        UI.DeactAllBtns();
+        if (!GameEnded) ChangePlayers(true);
+        isPlayerMoving = false;       
     }
    
     private void CheckBtns()
@@ -226,7 +492,7 @@ public class Table : MonoBehaviour
         else if (toBeat.Count == whichBeat.Count && !Players[currPl].isBot())
         {
             UI.ActTossBtn();
-        }        
+        }       
     }
     private bool haveWinner()
     {
@@ -256,7 +522,10 @@ public class Table : MonoBehaviour
     }  
 
     private void Awake()
-    {
+    {        
+        Vector2 worldBoundary = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height));
+        R_Border = worldBoundary.x;
+        U_Border = worldBoundary.y;
         UI = FindObjectOfType<UIManager>();
         deck = FindObjectOfType<Deck>();       
         currPl = 0;
