@@ -25,19 +25,23 @@ public class Player : MonoBehaviour
         if (!isAI) card.setFront();        
     }
     public void RemoveCard(Card card) { cards.Remove(card); }         
-    private void Start()
+    private void Awake()
     {
         table = FindObjectOfType<Table>();
-        deck = FindObjectOfType<Deck>();
+        deck = FindObjectOfType<Deck>();                    
+    }   
+
+    public void TakeCards()
+    {
         deck.TakeCards(this);
         table.setPlCardsPos(this);
         if (!isAI)
-        {          
-            foreach (var card in cards)                 
+        {
+            foreach (var card in cards)
             {
                 card.setFront();
                 card.setLayer(1);
             }
-        }              
-    }   
+        }
+    }
 }

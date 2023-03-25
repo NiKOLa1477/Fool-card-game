@@ -59,9 +59,28 @@ public class Deck : MonoBehaviour
         }
         UI.UpdDeckCount(CountCards(), Trump);
     }
+    public void changeTo36Cards()
+    {
+        for (int i = cards.Count - 1; i >= 0; i--) 
+        {
+            if (cards[i].getValue() < 6 || cards[i].getValue() == 15)
+            {
+                cards[i].gameObject.SetActive(false);
+                cards.Remove(cards[i]);
+            }
+        }        
+    }
     private void Awake()
     {
         UI = FindObjectOfType<UIManager>();
+        if(PlayerPrefs.HasKey("Deck"))
+        {
+            int count = PlayerPrefs.GetInt("Deck");
+            if(count == 36)
+            {
+                changeTo36Cards();
+            }
+        }
         TossTheDeck();
         while(cards[cards.Count - 1].getType() == CardType.Joker)
             TossTheDeck();

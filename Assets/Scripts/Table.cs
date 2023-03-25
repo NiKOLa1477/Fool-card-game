@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -58,7 +60,7 @@ public class Table : MonoBehaviour
                     start = -R_Border + (R_Border / 10);
                     for (int i = 0; i < cards.Count; i++)
                     {
-                        if (dx < 1.4f) cards[i].setLayer(i);
+                        cards[i].setLayer(i);
                         cards[i].transform.position = new Vector3(start + i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
                     }
                     break;
@@ -71,7 +73,7 @@ public class Table : MonoBehaviour
                         start = -R_Border + (R_Border / 10);
                         for (int i = 0; i < cards.Count; i++)
                         {
-                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].setLayer(i);
                             cards[i].transform.position = new Vector3(start + i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
                         }
                     }
@@ -83,7 +85,7 @@ public class Table : MonoBehaviour
                         start = R_Border - (R_Border / 10);
                         for (int i = 0; i < cards.Count; i++)
                         {
-                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].setLayer(i);
                             cards[i].transform.position = new Vector3(start - i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
                         }
                     }
@@ -97,7 +99,7 @@ public class Table : MonoBehaviour
                         start = -R_Border + (R_Border / 10);
                         for (int i = 0; i < cards.Count; i++)
                         {
-                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].setLayer(i);
                             cards[i].transform.position = new Vector3(start + i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
                         }
                     }
@@ -109,7 +111,7 @@ public class Table : MonoBehaviour
                         start = -R_Border / 4;
                         for (int i = 0; i < cards.Count; i++)
                         {
-                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].setLayer(i);
                             cards[i].transform.position = new Vector3(start + i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
                         }
                     }                    
@@ -121,7 +123,7 @@ public class Table : MonoBehaviour
                         start = R_Border - (R_Border / 10);
                         for (int i = 0; i < cards.Count; i++)
                         {
-                            if (dx < 1.4f) cards[i].setLayer(i);
+                            cards[i].setLayer(i);
                             cards[i].transform.position = new Vector3(start - i * dx, U_Border - U_Border / 5, cards[i].transform.position.z);
                         }
                     }
@@ -522,14 +524,34 @@ public class Table : MonoBehaviour
     }  
 
     private void Awake()
-    {        
+    {
+        deck = FindObjectOfType<Deck>();       
         Vector2 worldBoundary = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height));
         R_Border = worldBoundary.x;
         U_Border = worldBoundary.y;
-        UI = FindObjectOfType<UIManager>();
-        deck = FindObjectOfType<Deck>();       
+        UI = FindObjectOfType<UIManager>();               
         currPl = 0;
         currEnemy = 1;
         UI.UpdPlayers(currPl, currEnemy);
+    }
+    private void Start()
+    {
+        loadData();
+        foreach (var pl in Players)
+        {
+            pl.TakeCards();
+        }
+    }
+
+    private void loadData()
+    {
+        if(PlayerPrefs.HasKey("Players"))
+        {
+            int count = PlayerPrefs.GetInt("Players");
+            for (int i = Players.Count - 1; i >= count; i--)
+            {
+                Players.Remove(Players[i]);
+            }
+        }       
     }
 }

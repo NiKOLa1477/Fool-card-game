@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -5,6 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class UIManager : MonoBehaviour
 {
@@ -70,19 +72,30 @@ public class UIManager : MonoBehaviour
         PlNameBgs[j] = temp;
     }
     private void Start()
-    {
-        var table = FindObjectOfType<Table>();       
-        if(table.getPlCount() == 3)
-        {
-            swapNames(2, 3);
-            PlNameBgs[3].gameObject.SetActive(false);
-        }
+    {       
+        checkLabels();
         trumpNames=new List<string>();
         trumpNames.Add("Club");
         trumpNames.Add("Diamond");
         trumpNames.Add("Heart");
         trumpNames.Add("Spade");        
     }
+
+    private void checkLabels()
+    {
+        var table = FindObjectOfType<Table>();
+        if (table.getPlCount() == 3)
+        {
+            swapNames(2, 3);
+            PlNameBgs[3].gameObject.SetActive(false);
+        }
+        for (int i = 3; i >= table.getPlCount(); i--)
+        {
+            PlNameBgs[i].gameObject.SetActive(false);
+            PlNameBgs.Remove(PlNameBgs[i]);
+        }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
