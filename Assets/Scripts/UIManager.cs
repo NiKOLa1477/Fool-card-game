@@ -82,6 +82,12 @@ public class UIManager : MonoBehaviour
     }
     public void toMenu()
     {
+        if (isPaused)
+        {
+            isPaused = false;
+            Time.timeScale = 1.0f;
+            PauseWind.SetActive(false);
+        }
         PlayerPrefs.DeleteKey("LastFool");
         SceneManager.LoadScene(0);
     }

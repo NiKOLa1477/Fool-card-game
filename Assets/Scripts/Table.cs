@@ -607,10 +607,25 @@ public class Table : MonoBehaviour
         }
         else
         {
-            currPl = 0;
-            currEnemy = 1;
+            currPl = getPlWithMinTrump();
+            currEnemy = (currPl == Players.Count - 1) ? 0 : currPl + 1;
         }
         UI.UpdPlayers(currPl, currEnemy);
+    }
+
+    private int getPlWithMinTrump()
+    {
+        int minInd = 5;
+        int minValue = 15;
+        for (int i = 0; i < Players.Count; i++)
+        {
+            if (Players[i].getMinTrumpValue() < minValue)
+            {
+                minInd = i;
+                minValue = Players[i].getMinTrumpValue();
+            }
+        }
+        return minInd;
     }
 
     private void loadData()

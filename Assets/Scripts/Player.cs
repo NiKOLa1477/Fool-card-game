@@ -8,6 +8,18 @@ public class Player : MonoBehaviour
     private Deck deck;
     private Table table;
     private List<Card> cards = new List<Card>();
+    public int getMinTrumpValue()
+    {
+        int minValue = 15;
+        foreach (var card in cards)
+        {
+            if(card.getType() == deck.Trump && card.getValue() < minValue)
+            {
+                minValue = card.getValue();
+            }
+        }
+        return minValue;
+    }
     public int getCardsCount() { return cards.Count; }
     public List<Card> getCards() { return cards; }
     public bool hasCards() 

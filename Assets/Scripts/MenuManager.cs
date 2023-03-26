@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,9 +13,24 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private TMP_Text Total, Wins, Looses;
     private const int initPlayers = 2;
     private void Awake()
-    {       
+    {
+        loadSettings();
         SaveData();
     }
+
+    private void loadSettings()
+    {
+        if(PlayerPrefs.HasKey("Players"))
+        {
+            players.value = PlayerPrefs.GetInt("Players") - initPlayers;          
+        }
+        if(PlayerPrefs.HasKey("Deck"))
+        {
+            int cards = PlayerPrefs.GetInt("Deck");
+            deck.value = (cards == 36) ? 0 : 1;
+        }
+    }
+
     private void SaveData()
     {
         PlayerPrefs.SetInt("Players", players.value + initPlayers);
