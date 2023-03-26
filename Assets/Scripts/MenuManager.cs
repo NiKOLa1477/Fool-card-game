@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -7,10 +8,11 @@ using UnityEngine.SceneManagement;
 public class MenuManager : MonoBehaviour
 {
     [SerializeField] private TMP_Dropdown players, deck;
-    [SerializeField] private GameObject OptionsWind;
+    [SerializeField] private GameObject OptionsWind, StatsWind;
+    [SerializeField] private TMP_Text Total, Wins, Looses;
     private const int initPlayers = 2;
     private void Awake()
-    {
+    {       
         SaveData();
     }
     private void SaveData()
@@ -22,12 +24,53 @@ public class MenuManager : MonoBehaviour
 
     public void Play()
     {
+        PlayerPrefs.DeleteKey("LastFool");
         SaveData();
         SceneManager.LoadScene(1);
     }
     public void Options()
     {
         OptionsWind.SetActive(!OptionsWind.activeInHierarchy);
+    }
+    public void Stats()
+    {
+        loadStats();
+        StatsWind.SetActive(!StatsWind.activeInHierarchy);
+    }
+
+    private void loadStats()
+    {
+        if(PlayerPrefs.HasKey("Total"))
+        {
+            Total.text = "Total: " + PlayerPrefs.GetInt("Total").ToString();
+        }
+        else
+        {
+            Total.text = "Total: 0";
+        }
+        if (PlayerPrefs.HasKey("Wins"))
+        {
+            Wins.text = "Wins: " + PlayerPrefs.GetInt("Wins").ToString();
+        }
+        else
+        {
+            Wins.text = "Wins: 0";
+        }
+        if (PlayerPrefs.HasKey("Looses"))
+        {
+            Looses.text = "Looses: " + PlayerPrefs.GetInt("Looses").ToString();
+        }
+        else
+        {
+            Looses.text = "Looses: 0";
+        }
+    }
+    public void clearStats()
+    {
+        PlayerPrefs.DeleteKey("Total");
+        PlayerPrefs.DeleteKey("Wins");
+        PlayerPrefs.DeleteKey("Looses");
+        loadStats();
     }
 
     public void Exit()

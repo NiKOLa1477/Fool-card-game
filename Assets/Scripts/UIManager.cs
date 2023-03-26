@@ -13,7 +13,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private List<Image> PlNameBgs;
     [SerializeField] private TMP_Text inDeckCount;
     [SerializeField] private List<string> trumpNames;
-    [SerializeField] private Button onTake, onToss, onPass, Restart;
+    [SerializeField] private Button onTake, onToss, onPass, Continue, Menu;
 
     public void UpdDeckCount(int value, CardType trump) 
     { 
@@ -54,15 +54,20 @@ public class UIManager : MonoBehaviour
         onTake.gameObject.SetActive(false);
         onToss.gameObject.SetActive(false);
         onPass.gameObject.SetActive(false);
-        if (gameEnded) Restart.gameObject.SetActive(true);
+        if (gameEnded)
+        {
+            Continue.gameObject.SetActive(true);
+            Menu.gameObject.SetActive(true);
+        }
     }
     public void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-    public void Exit()
+    public void toMenu()
     {
-        Application.Quit();
+        PlayerPrefs.DeleteKey("LastFool");
+        SceneManager.LoadScene(0);
     }
 
     private void swapNames(int i, int j)
@@ -99,6 +104,6 @@ public class UIManager : MonoBehaviour
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
-            Exit();
+            toMenu();
     }
 }

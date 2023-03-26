@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Pool;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
 
@@ -498,24 +499,36 @@ public class Table : MonoBehaviour
     }
     private bool haveWinner()
     {
-        int i = 0;
+        int actPls = 0;
         string fool = "";
         foreach (var pl in Players)
         {
             if(pl.hasCards())
             {
-                i++;
+                actPls++;
                 fool = pl.getName();
             }
         }
-        if(i == 1)
+        saveWinner(actPls);
+        if(actPls == 1)
         {
+            saveTotal();
+            for (int i = 0; i < Players.Count; i++)           
+            {
+                if (Players[i].getName() == fool)
+                {
+                    saveFool(i);
+                    PlayerPrefs.SetInt("LastFool", i);
+                }
+            }
             Debug.Log($"{fool} is a fool!");
             UI.DeactAllBtns(true);
             return true;
         }
-        else if(i == 0)
+        else if(actPls == 0)
         {
+            saveTotal();
+            PlayerPrefs.DeleteKey("LastFool");
             Debug.Log("Draw");
             UI.DeactAllBtns(true);
             return true;
@@ -523,16 +536,59 @@ public class Table : MonoBehaviour
         return false;
     }  
 
+    private void saveTotal()
+    {
+        if (PlayerPrefs.HasKey("Total"))
+        {
+            PlayerPrefs.SetInt("Total", PlayerPrefs.GetInt("Total") + 1);
+        }
+        else
+        {
+            PlayerPrefs.SetInt("Total", 1);
+        }
+    }
+    private void saveWinner(int actPls)
+    {
+        if (actPls == Players.Count - 1)
+        {
+            foreach (var pl in Players)
+            {
+                if (!pl.hasCards() && !pl.isBot())
+                {
+                    if(PlayerPrefs.HasKey("Wins"))
+                    {
+                        PlayerPrefs.SetInt("Wins", PlayerPrefs.GetInt("Wins") + 1);
+                    }
+                    else
+                    {
+                        PlayerPrefs.SetInt("Wins", 1);
+                    }
+                }
+            }
+        }
+    }
+    private void saveFool(int index)
+    {
+        if (!Players[index].isBot())
+        {
+            if (PlayerPrefs.HasKey("Looses"))
+            {
+                PlayerPrefs.SetInt("Looses", PlayerPrefs.GetInt("Looses") + 1);
+            }
+            else
+            {
+                PlayerPrefs.SetInt("Looses", 1);
+            }
+        }
+    }
+
     private void Awake()
     {
         deck = FindObjectOfType<Deck>();       
         Vector2 worldBoundary = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height));
         R_Border = worldBoundary.x;
         U_Border = worldBoundary.y;
-        UI = FindObjectOfType<UIManager>();               
-        currPl = 0;
-        currEnemy = 1;
-        UI.UpdPlayers(currPl, currEnemy);
+        UI = FindObjectOfType<UIManager>();        
     }
     private void Start()
     {
@@ -541,6 +597,17 @@ public class Table : MonoBehaviour
         {
             pl.TakeCards();
         }
+        if (PlayerPrefs.HasKey("LastFool"))
+        {
+            currEnemy = PlayerPrefs.GetInt("LastFool");
+            currPl = (currEnemy == 0) ? Players.Count - 1 : currEnemy - 1;
+        }
+        else
+        {
+            currPl = 0;
+            currEnemy = 1;
+        }
+        UI.UpdPlayers(currPl, currEnemy);
     }
 
     private void loadData()
