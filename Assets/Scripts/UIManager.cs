@@ -6,7 +6,6 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class UIManager : MonoBehaviour
 {
@@ -14,6 +13,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text inDeckCount;
     [SerializeField] private List<string> trumpNames;
     [SerializeField] private Button onTake, onToss, onPass, Continue, Menu;
+    [SerializeField] private GameObject PauseWind;
+    public bool isPaused { get; private set; }
 
     public void UpdDeckCount(int value, CardType trump) 
     { 
@@ -64,6 +65,21 @@ public class UIManager : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+    public void Pause()
+    {
+        if(isPaused)
+        {
+            isPaused = false;
+            Time.timeScale = 1.0f;
+            PauseWind.SetActive(false);
+        }
+        else
+        {
+            isPaused = true;
+            Time.timeScale = 0f;
+            PauseWind.SetActive(true);
+        }
+    }
     public void toMenu()
     {
         PlayerPrefs.DeleteKey("LastFool");
@@ -104,6 +120,6 @@ public class UIManager : MonoBehaviour
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
-            toMenu();
+            Pause();
     }
 }

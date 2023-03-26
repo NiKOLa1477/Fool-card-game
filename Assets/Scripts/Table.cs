@@ -19,9 +19,10 @@ public class Table : MonoBehaviour
     public int currEnemy { get; private set; }
     public bool isPlayerMoving { get; private set; }
     public Player getPlAt(int index) { return Players[index]; }
-    public bool GameEnded { get; private set; }
+    public bool GameEnded { get; private set; }   
     private bool isPlayerFinished;
     private float beatTime = 20;
+    private bool savedWinner;
 
     public void finishTurn() 
     {
@@ -184,7 +185,7 @@ public class Table : MonoBehaviour
     }
     public void tryPlaceCard(Player pl, Card card)
     {
-        if(pl == Players[currPl] 
+        if(pl == Players[currPl] && !UI.isPaused 
             && Players[currEnemy].getCardsCount() > toBeat.Count - whichBeat.Count
             && toBeat.Count < 6)
         {
@@ -197,7 +198,7 @@ public class Table : MonoBehaviour
                 PlaceToBeatCard(pl, card);
             }
         }
-        else if(pl == Players[currEnemy] && toBeat.Count != whichBeat.Count)
+        else if(pl == Players[currEnemy] && toBeat.Count != whichBeat.Count && !UI.isPaused)
         {
             var item = toBeat[toBeat.Count - 1];
             if(item.getType() != CardType.Joker)
@@ -553,8 +554,9 @@ public class Table : MonoBehaviour
         {
             foreach (var pl in Players)
             {
-                if (!pl.hasCards() && !pl.isBot())
+                if (!pl.hasCards() && !pl.isBot() && !savedWinner)
                 {
+                    savedWinner = true;
                     if(PlayerPrefs.HasKey("Wins"))
                     {
                         PlayerPrefs.SetInt("Wins", PlayerPrefs.GetInt("Wins") + 1);
@@ -584,6 +586,7 @@ public class Table : MonoBehaviour
 
     private void Awake()
     {
+        savedWinner = false;
         deck = FindObjectOfType<Deck>();       
         Vector2 worldBoundary = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height));
         R_Border = worldBoundary.x;
