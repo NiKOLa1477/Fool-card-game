@@ -139,6 +139,7 @@ public class Table : MonoBehaviour
             start = -R_Border + (R_Border / 10);
             for (int i = 0; i < cards.Count; i++)
             {
+                cards[i].setLayer(i);
                 cards[i].transform.position = new Vector3(start + i * dx, -U_Border + U_Border / 4, cards[i].transform.position.z);
             }
         }
